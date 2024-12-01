@@ -1,0 +1,139 @@
+{
+ "cells": [
+  {
+   "cell_type": "code",
+   "execution_count": 1,
+   "id": "3d6b2197",
+   "metadata": {
+    "_cell_guid": "b1076dfc-b9ad-4769-8c92-a6c4dae69d19",
+    "_uuid": "8f2839f25d086af736a60e9eeb907d3b93b6e0e5",
+    "execution": {
+     "iopub.execute_input": "2024-12-01T11:43:27.350070Z",
+     "iopub.status.busy": "2024-12-01T11:43:27.349668Z",
+     "iopub.status.idle": "2024-12-01T11:43:28.467634Z",
+     "shell.execute_reply": "2024-12-01T11:43:28.466417Z"
+    },
+    "papermill": {
+     "duration": 1.124627,
+     "end_time": "2024-12-01T11:43:28.470433",
+     "exception": false,
+     "start_time": "2024-12-01T11:43:27.345806",
+     "status": "completed"
+    },
+    "tags": []
+   },
+   "outputs": [
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "Decision Tree:\n",
+      "{'Attendance': {'Good': 'Excellent', 'Low': 'Worse'}}\n"
+     ]
+    }
+   ],
+   "source": [
+    "import pandas as pd\n",
+    "import numpy as np\n",
+    "\n",
+    "# Dataset\n",
+    "data = {\n",
+    "    'Names': ['Asiya Afifah Zuhri', 'Syauqina Qonita', 'Alifia Fidela Firtinita',\n",
+    "              'Ashfa Nadhira Rabbaniyyah', 'Alya Khairunnisa', 'Hani Qurrata A\\'Yuni',\n",
+    "              'Nida Fakhirah', 'Nurul Maghfirah'],\n",
+    "    'Class': ['1B', '1B', '2C', '2C', '3A', '3A', '3A', '3A'],\n",
+    "    'Attendance': ['Good', 'Good', 'Good', 'Good', 'Low', 'Good', 'Good', 'Good'],\n",
+    "    'Attitude': ['Medium', 'Medium', 'Medium', 'Medium', 'Enough', 'Medium', 'Medium', 'Medium'],\n",
+    "    'Creativity': ['Low', 'Low', 'Low', 'Low', 'Low', 'Medium', 'Medium', 'Medium'],\n",
+    "    'Response': ['Excellent', 'Excellent', 'Excellent', 'Excellent', 'Worse', 'Excellent', 'Excellent', 'Excellent']\n",
+    "}\n",
+    "\n",
+    "df = pd.DataFrame(data)\n",
+    "\n",
+    "# Entropy calculation\n",
+    "def entropy(target_col):\n",
+    "    elements, counts = np.unique(target_col, return_counts=True)\n",
+    "    entropy_value = -np.sum([(counts[i] / np.sum(counts)) * np.log2(counts[i] / np.sum(counts)) for i in range(len(elements))])\n",
+    "    return entropy_value\n",
+    "\n",
+    "# Information Gain calculation\n",
+    "def info_gain(data, split_attribute_name, target_name=\"Response\"):\n",
+    "    total_entropy = entropy(data[target_name])\n",
+    "    vals, counts = np.unique(data[split_attribute_name], return_counts=True)\n",
+    "    weighted_entropy = np.sum([(counts[i] / np.sum(counts)) * entropy(data[data[split_attribute_name] == vals[i]][target_name]) for i in range(len(vals))])\n",
+    "    information_gain = total_entropy - weighted_entropy\n",
+    "    return information_gain\n",
+    "\n",
+    "# ID3 Algorithm\n",
+    "def id3(data, original_data, features, target_attribute_name=\"Response\", parent_node_class=None):\n",
+    "    # Base cases\n",
+    "    if len(np.unique(data[target_attribute_name])) <= 1:\n",
+    "        return np.unique(data[target_attribute_name])[0]\n",
+    "    elif len(data) == 0:\n",
+    "        return np.unique(original_data[target_attribute_name])[np.argmax(np.unique(original_data[target_attribute_name], return_counts=True)[1])]\n",
+    "    elif len(features) == 0:\n",
+    "        return parent_node_class\n",
+    "    else:\n",
+    "        parent_node_class = np.unique(data[target_attribute_name])[np.argmax(np.unique(data[target_attribute_name], return_counts=True)[1])]\n",
+    "        item_values = [info_gain(data, feature, target_attribute_name) for feature in features]\n",
+    "        best_feature_index = np.argmax(item_values)\n",
+    "        best_feature = features[best_feature_index]\n",
+    "        tree = {best_feature: {}}\n",
+    "        features = [i for i in features if i != best_feature]\n",
+    "        for value in np.unique(data[best_feature]):\n",
+    "            sub_data = data.where(data[best_feature] == value).dropna()\n",
+    "            subtree = id3(sub_data, data, features, target_attribute_name, parent_node_class)\n",
+    "            tree[best_feature][value] = subtree\n",
+    "        return tree\n",
+    "\n",
+    "# Running the algorithm\n",
+    "features = ['Attendance', 'Attitude', 'Creativity']\n",
+    "decision_tree = id3(df, df, features)\n",
+    "print(\"Decision Tree:\")\n",
+    "print(decision_tree)\n"
+   ]
+  }
+ ],
+ "metadata": {
+  "kaggle": {
+   "accelerator": "none",
+   "dataSources": [],
+   "dockerImageVersionId": 30786,
+   "isGpuEnabled": false,
+   "isInternetEnabled": false,
+   "language": "python",
+   "sourceType": "notebook"
+  },
+  "kernelspec": {
+   "display_name": "Python 3",
+   "language": "python",
+   "name": "python3"
+  },
+  "language_info": {
+   "codemirror_mode": {
+    "name": "ipython",
+    "version": 3
+   },
+   "file_extension": ".py",
+   "mimetype": "text/x-python",
+   "name": "python",
+   "nbconvert_exporter": "python",
+   "pygments_lexer": "ipython3",
+   "version": "3.10.14"
+  },
+  "papermill": {
+   "default_parameters": {},
+   "duration": 4.723048,
+   "end_time": "2024-12-01T11:43:28.994538",
+   "environment_variables": {},
+   "exception": null,
+   "input_path": "__notebook__.ipynb",
+   "output_path": "__notebook__.ipynb",
+   "parameters": {},
+   "start_time": "2024-12-01T11:43:24.271490",
+   "version": "2.6.0"
+  }
+ },
+ "nbformat": 4,
+ "nbformat_minor": 5
+}
